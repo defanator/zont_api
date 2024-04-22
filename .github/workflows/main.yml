@@ -1,0 +1,46 @@
+name: zont_api CI
+
+on:
+  workflow_dispatch:
+  push:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install tox
+        run: pip install tox
+      - name: Run linters
+        run: make lint
+      - name: Run tests
+        run: make test
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: htmlcov-py${{ matrix.python }}
+          path: htmlcov.py*
+          retention-days: 14
+      - name: Build package
+        run: make build
+      - name: Upload dist
+        uses: actions/upload-artifact@v4
+        if: matrix.python == '3.12'
+        with:
+          name: packages
+          path: dist/*
+          retention-days: 14
