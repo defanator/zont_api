@@ -74,7 +74,7 @@ clean: ## Clean up
 		rm -rf $(TOPDIR)/$${dir} ; \
 	done
 	rm -f $(TOPDIR)/.coverage
-	rm -rf $(TOPDIR)/htmlcov.py*
+	rm -rf $(TOPDIR)/htmlcov-py*
 	rm -f $(TOPDIR)/src/zont_api/version.py $(TOPDIR)/VERSION
 
 .PHONY: build test lint fmt venv clean
