@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel", "setuptools-git-versioning>=2.0,<3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zont_api"
+authors = [
+  {name="Andrei Belov", email="defanator@gmail.com"},
+]
+description = "Module to interact with ZONT API"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dynamic = ["version", "dependencies"]
+
+[project.urls]
+Homepage = "https://github.com/defanator/zont_api"
+Issues = "https://github.com/defanator/zont_api/issues"
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[tool.setuptools-git-versioning]
+enabled = true
+version_file = "VERSION"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+
+[tool.coverage.run]
+dynamic_context = "test_function"
+
+[tools.coverage.html]
+show_contexts = "true"

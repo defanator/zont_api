@@ -1,0 +1,14 @@
+*.pyc
+*.pyo
+*.egg-info
+.coverage
+.coverage.py*
+.venv
+.tox
+.pytest_cache
+build/
+dist/
+htmlcov/
+htmlcov.py*/
+VERSION
+src/zont_api/version.py
