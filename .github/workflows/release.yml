@@ -43,7 +43,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
-          logout: false
       - name: Push images
         run: make images
 
