@@ -2,9 +2,6 @@ name: zont_api CI
 
 on:
   workflow_dispatch:
-  push:
-    tags-ignore:
-      - "v*.*.*"
   pull_request:
     branches:
       - main
