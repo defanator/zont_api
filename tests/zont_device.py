@@ -644,7 +644,7 @@ def test_update_device_with_api_exception(mock_requests, caplog):
     assert isinstance(zapi, ZontAPI)
     devices = zapi.get_devices()
     assert len(devices) == 1
-    assert devices[0].id == 42
+    assert devices[0].id == 43
     assert isinstance(devices[0].api, ZontAPI)
 
     mock_response = MagicMock()
