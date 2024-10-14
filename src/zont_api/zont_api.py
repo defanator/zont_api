@@ -264,7 +264,7 @@ class ZontAPI:
 
     def load_data(
         self, device_id: int, data_types: list = None, interval: tuple = None
-    ) -> dict | None:
+    ) -> dict:
         """
         Obtain various data for a given device
 
