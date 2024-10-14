@@ -35,7 +35,7 @@ MOCK_API_RESPONSE_SINGLE_DEVICE = {
             "name": "my_device_42",
             "last_receive_time": 1000,
         }
-    ]
+    ],
 }
 
 MOCK_API_RESPONSE_SINGLE_DEVICE_UPDATE = {
@@ -46,7 +46,7 @@ MOCK_API_RESPONSE_SINGLE_DEVICE_UPDATE = {
             "name": "my_device_42",
             "last_receive_time": 1060,
         }
-    ]
+    ],
 }
 
 MOCK_API_RESPONSE_SINGLE_DEVICE_UPDATE_NOT_FOUND = {
@@ -57,7 +57,7 @@ MOCK_API_RESPONSE_SINGLE_DEVICE_UPDATE_NOT_FOUND = {
             "name": "my_device_451",
             "last_receive_time": 700,
         }
-    ]
+    ],
 }
 
 MOCK_API_RESPONSE_SINGLE_DEVICE_WITH_PII = {
@@ -98,8 +98,12 @@ MOCK_API_RESPONSE_SINGLE_DEVICE_WITH_PII = {
     ],
 }
 
-MOCK_API_RESPONSE_SINGLE_DEVICE_WITH_PII_UPDATE = deepcopy(MOCK_API_RESPONSE_SINGLE_DEVICE_WITH_PII)
-MOCK_API_RESPONSE_SINGLE_DEVICE_WITH_PII_UPDATE["devices"][0]["last_receive_time"] = 1060
+MOCK_API_RESPONSE_SINGLE_DEVICE_WITH_PII_UPDATE = deepcopy(
+    MOCK_API_RESPONSE_SINGLE_DEVICE_WITH_PII
+)
+MOCK_API_RESPONSE_SINGLE_DEVICE_WITH_PII_UPDATE["devices"][0][
+    "last_receive_time"
+] = 1060
 
 print(MOCK_API_RESPONSE_SINGLE_DEVICE_WITH_PII_UPDATE)
 
@@ -114,7 +118,7 @@ MOCK_API_RESPONSE_MULTIPLE_DEVICES = {
             "id": 451,
             "name": "my_device_451",
         },
-    ]
+    ],
 }
 
 MOCK_API_RESPONSE_NO_DEVICES_SUBTREE = {
@@ -137,7 +141,7 @@ MOCK_API_RESPONSE_SINGLE_DEVICE_WITHOUT_ID = {
         {
             "name": "my_device_with_unknown_id",
         }
-    ]
+    ],
 }
 
 MOCK_API_RESPONSE_SINGLE_DEVICE_WITHOUT_NAME = {
@@ -146,7 +150,7 @@ MOCK_API_RESPONSE_SINGLE_DEVICE_WITHOUT_NAME = {
         {
             "id": 777,
         }
-    ]
+    ],
 }
 
 MOCK_API_RESPONSE_DEVICE_WITH_SENSORS = {
@@ -183,9 +187,9 @@ MOCK_API_RESPONSE_DEVICE_WITH_SENSORS = {
                 "radiosensors": [],
                 "radiosensors433": None,
                 "io_extensions": [None],
-            }
+            },
         }
-    ]
+    ],
 }
 
 
@@ -193,18 +197,20 @@ def test_init_device_directly():
     """
     Create ZontDevice manually with a given data dict
     """
-    zdev = ZontDevice(device_data={'id': 42, 'name': 'testdevice'})
+    zdev = ZontDevice(device_data={"id": 42, "name": "testdevice"})
     assert isinstance(zdev, ZontDevice)
     assert zdev.id == 42
-    assert zdev.name == 'testdevice'
-    assert str(zdev) == 'ZontDevice: testdevice (id=42)'
+    assert zdev.name == "testdevice"
+    assert str(zdev) == "ZontDevice: testdevice (id=42)"
+
 
 def test_init_device_directly_no_data():
     """
     Create ZontDevice manually without any parameters
     """
-    with pytest.raises(ZontAPIException, match=r'500: device must have an ID'):
+    with pytest.raises(ZontAPIException, match=r"500: device must have an ID"):
         _ = ZontDevice()
+
 
 @patch("zont_api.zont_api.requests")
 def test_init_device_from_api_403(mock_requests, caplog):
@@ -218,10 +224,11 @@ def test_init_device_from_api_403(mock_requests, caplog):
     mock_response.json.return_value = MOCK_API_RESPONSE_AUTH_FAILED
     mock_requests.post.return_value = mock_response
 
-    zapi = ZontAPI(token='wrongtoken', client='wrongclient')
+    zapi = ZontAPI(token="wrongtoken", client="wrongclient")
     assert isinstance(zapi, ZontAPI)
-    with pytest.raises(ZontAPIException, match=r'403: auth_failed'):
+    with pytest.raises(ZontAPIException, match=r"403: auth_failed"):
         _ = zapi.get_devices()
+
 
 @patch("zont_api.zont_api.requests")
 def test_init_device_from_api_404(mock_requests, caplog):
@@ -235,10 +242,11 @@ def test_init_device_from_api_404(mock_requests, caplog):
     mock_response.json.return_value = MOCK_API_RESPONSE_DEVICE_NOT_FOUND
     mock_requests.post.return_value = mock_response
 
-    zapi = ZontAPI(token='testtoken', client='testclient')
+    zapi = ZontAPI(token="testtoken", client="testclient")
     assert isinstance(zapi, ZontAPI)
-    with pytest.raises(ZontAPIException, match=r'404: no_such_device'):
+    with pytest.raises(ZontAPIException, match=r"404: no_such_device"):
         _ = zapi.get_devices()
+
 
 @patch("zont_api.zont_api.requests")
 def test_init_device_from_api_500(mock_requests, caplog):
@@ -252,10 +260,11 @@ def test_init_device_from_api_500(mock_requests, caplog):
     mock_response.json.return_value = {}
     mock_requests.post.return_value = mock_response
 
-    zapi = ZontAPI(token='testtoken', client='testclient')
+    zapi = ZontAPI(token="testtoken", client="testclient")
     assert isinstance(zapi, ZontAPI)
-    with pytest.raises(ZontAPIException, match=r'500: API call to /devices failed'):
+    with pytest.raises(ZontAPIException, match=r"500: API call to /devices failed"):
         _ = zapi.get_devices()
+
 
 @patch("zont_api.zont_api.requests.post")
 def test_init_device_from_api_connection_error(mock_requests_post, caplog):
@@ -266,10 +275,11 @@ def test_init_device_from_api_connection_error(mock_requests_post, caplog):
 
     mock_requests_post.side_effect = requests_exceptions.ConnectTimeout()
 
-    zapi = ZontAPI(token='testtoken', client='testclient')
+    zapi = ZontAPI(token="testtoken", client="testclient")
     assert isinstance(zapi, ZontAPI)
-    with pytest.raises(ZontAPIException, match=r'500: API call failed'):
+    with pytest.raises(ZontAPIException, match=r"500: API call failed"):
         _ = zapi.get_devices()
+
 
 @patch("zont_api.zont_api.requests")
 def test_init_device_from_api(mock_requests, caplog):
@@ -283,16 +293,17 @@ def test_init_device_from_api(mock_requests, caplog):
     mock_response.json.return_value = MOCK_API_RESPONSE_SINGLE_DEVICE
     mock_requests.post.return_value = mock_response
 
-    zapi = ZontAPI(token='testtoken', client='testclient')
+    zapi = ZontAPI(token="testtoken", client="testclient")
     assert isinstance(zapi, ZontAPI)
     devices = zapi.get_devices()
     assert len(devices) == 1
 
-    assert devices[0].api.api_token == 'testtoken'
-    assert devices[0].api.api_client == 'testclient'
+    assert devices[0].api.api_token == "testtoken"
+    assert devices[0].api.api_client == "testclient"
     assert devices[0].id == 42
     assert devices[0].name == "my_device_42"
-    assert str(devices[0]) == 'ZontDevice: my_device_42 (id=42)'
+    assert str(devices[0]) == "ZontDevice: my_device_42 (id=42)"
+
 
 @patch("zont_api.zont_api.requests")
 def test_init_device_from_api_pii_filtered(mock_requests, caplog):
@@ -306,19 +317,20 @@ def test_init_device_from_api_pii_filtered(mock_requests, caplog):
     mock_response.json.return_value = MOCK_API_RESPONSE_SINGLE_DEVICE_WITH_PII
     mock_requests.post.return_value = mock_response
 
-    zapi = ZontAPI(token='testtoken', client='testclient')
+    zapi = ZontAPI(token="testtoken", client="testclient")
     assert isinstance(zapi, ZontAPI)
     devices = zapi.get_devices()
     assert len(devices) == 1
 
     # verify that PII was filtered
-    assert devices[0].data["ip"] == '***'
-    assert devices[0].data["login"] == '***'
-    assert devices[0].data["sim_in_device"]["sim_id"]["operator"] == '***'
-    assert devices[0].data["sim_in_device"]["sim_id"]["id"] == '***'
+    assert devices[0].data["ip"] == "***"
+    assert devices[0].data["login"] == "***"
+    assert devices[0].data["sim_in_device"]["sim_id"]["operator"] == "***"
+    assert devices[0].data["sim_in_device"]["sim_id"]["id"] == "***"
     assert devices[0].data["stationary_location"]["loc"] == []
-    assert devices[0].data["users"][0]["phone"] == '***'
-    assert devices[0].data["users"][0]["password"] == '***'
+    assert devices[0].data["users"][0]["phone"] == "***"
+    assert devices[0].data["users"][0]["password"] == "***"
+
 
 @patch("zont_api.zont_api.requests")
 def test_init_devices_from_api(mock_requests, caplog):
@@ -332,22 +344,23 @@ def test_init_devices_from_api(mock_requests, caplog):
     mock_response.json.return_value = MOCK_API_RESPONSE_MULTIPLE_DEVICES
     mock_requests.post.return_value = mock_response
 
-    zapi = ZontAPI(token='testtoken', client='testclient')
+    zapi = ZontAPI(token="testtoken", client="testclient")
     assert isinstance(zapi, ZontAPI)
     devices = zapi.get_devices()
     assert len(devices) == 2
 
-    assert devices[0].api.api_token == 'testtoken'
-    assert devices[0].api.api_client == 'testclient'
+    assert devices[0].api.api_token == "testtoken"
+    assert devices[0].api.api_client == "testclient"
     assert devices[0].id == 42
     assert devices[0].name == "my_device_42"
-    assert str(devices[0]) == 'ZontDevice: my_device_42 (id=42)'
+    assert str(devices[0]) == "ZontDevice: my_device_42 (id=42)"
 
-    assert devices[1].api.api_token == 'testtoken'
-    assert devices[1].api.api_client == 'testclient'
+    assert devices[1].api.api_token == "testtoken"
+    assert devices[1].api.api_client == "testclient"
     assert devices[1].id == 451
     assert devices[1].name == "my_device_451"
-    assert str(devices[1]) == 'ZontDevice: my_device_451 (id=451)'
+    assert str(devices[1]) == "ZontDevice: my_device_451 (id=451)"
+
 
 @patch("zont_api.zont_api.requests")
 def test_init_device_from_api_no_devices(mock_requests, caplog):
@@ -361,10 +374,11 @@ def test_init_device_from_api_no_devices(mock_requests, caplog):
     mock_response.json.return_value = MOCK_API_RESPONSE_NO_DEVICES_SUBTREE
     mock_requests.post.return_value = mock_response
 
-    zapi = ZontAPI(token='testtoken', client='testclient')
+    zapi = ZontAPI(token="testtoken", client="testclient")
     assert isinstance(zapi, ZontAPI)
     devices = zapi.get_devices()
     assert len(devices) == 0
+
 
 @patch("zont_api.zont_api.requests")
 def test_init_device_from_api_empty_devices(mock_requests, caplog):
@@ -378,10 +392,11 @@ def test_init_device_from_api_empty_devices(mock_requests, caplog):
     mock_response.json.return_value = MOCK_API_RESPONSE_EMPTY_DEVICES_LIST
     mock_requests.post.return_value = mock_response
 
-    zapi = ZontAPI(token='testtoken', client='testclient')
+    zapi = ZontAPI(token="testtoken", client="testclient")
     assert isinstance(zapi, ZontAPI)
     devices = zapi.get_devices()
     assert len(devices) == 0
+
 
 @patch("zont_api.zont_api.requests")
 def test_init_device_from_api_invalid_devices_value(mock_requests, caplog):
@@ -395,10 +410,11 @@ def test_init_device_from_api_invalid_devices_value(mock_requests, caplog):
     mock_response.json.return_value = MOCK_API_RESPONSE_INVALID_DEVICES_TYPE
     mock_requests.post.return_value = mock_response
 
-    zapi = ZontAPI(token='testtoken', client='testclient')
+    zapi = ZontAPI(token="testtoken", client="testclient")
     assert isinstance(zapi, ZontAPI)
     devices = zapi.get_devices()
     assert len(devices) == 0
+
 
 @patch("zont_api.zont_api.requests")
 def test_init_device_from_api_empty_response(mock_requests, caplog):
@@ -412,10 +428,11 @@ def test_init_device_from_api_empty_response(mock_requests, caplog):
     mock_response.json.return_value = None
     mock_requests.post.return_value = mock_response
 
-    zapi = ZontAPI(token='testtoken', client='testclient')
+    zapi = ZontAPI(token="testtoken", client="testclient")
     assert isinstance(zapi, ZontAPI)
     devices = zapi.get_devices()
     assert len(devices) == 0
+
 
 @patch("zont_api.zont_api.requests")
 def test_init_device_from_api_no_id(mock_requests, caplog):
@@ -429,10 +446,11 @@ def test_init_device_from_api_no_id(mock_requests, caplog):
     mock_response.json.return_value = MOCK_API_RESPONSE_SINGLE_DEVICE_WITHOUT_ID
     mock_requests.post.return_value = mock_response
 
-    zapi = ZontAPI(token='testtoken', client='testclient')
+    zapi = ZontAPI(token="testtoken", client="testclient")
     assert isinstance(zapi, ZontAPI)
-    with pytest.raises(ZontAPIException, match=r'500: device must have an ID'):
+    with pytest.raises(ZontAPIException, match=r"500: device must have an ID"):
         _ = zapi.get_devices()
+
 
 @patch("zont_api.zont_api.requests")
 def test_init_device_from_api_no_name(mock_requests, caplog):
@@ -446,10 +464,11 @@ def test_init_device_from_api_no_name(mock_requests, caplog):
     mock_response.json.return_value = MOCK_API_RESPONSE_SINGLE_DEVICE_WITHOUT_NAME
     mock_requests.post.return_value = mock_response
 
-    zapi = ZontAPI(token='testtoken', client='testclient')
+    zapi = ZontAPI(token="testtoken", client="testclient")
     assert isinstance(zapi, ZontAPI)
-    with pytest.raises(ZontAPIException, match=r'500: device must have a name'):
+    with pytest.raises(ZontAPIException, match=r"500: device must have a name"):
         _ = zapi.get_devices()
+
 
 @patch("zont_api.zont_api.requests")
 def test_device_sensors(mock_requests, caplog):
@@ -463,27 +482,28 @@ def test_device_sensors(mock_requests, caplog):
     mock_response.json.return_value = MOCK_API_RESPONSE_DEVICE_WITH_SENSORS
     mock_requests.post.return_value = mock_response
 
-    zapi = ZontAPI(token='testtoken', client='testclient')
+    zapi = ZontAPI(token="testtoken", client="testclient")
     assert isinstance(zapi, ZontAPI)
     zdev = zapi.get_devices()[0]
 
-    assert zdev.get_sensor_name(777123) == 'voltage input control'
-    assert zdev.get_sensor_name(777456) == 'air sensor'
-    assert zdev.get_sensor_name(777789) == 'opentherm adapter'
+    assert zdev.get_sensor_name(777123) == "voltage input control"
+    assert zdev.get_sensor_name(777456) == "air sensor"
+    assert zdev.get_sensor_name(777789) == "opentherm adapter"
     assert zdev.get_sensor_name(4242) is None
+
 
 def test_update_device_without_api():
     """
     Create ZontDevice manually and try to trigger the update
     """
-    zdev = ZontDevice(device_data={'id': 42, 'name': 'testdevice'})
+    zdev = ZontDevice(device_data={"id": 42, "name": "testdevice"})
     assert isinstance(zdev, ZontDevice)
 
     with pytest.raises(
-        ZontAPIException,
-        match=r'400: API object not associated with a given device'
+        ZontAPIException, match=r"400: API object not associated with a given device"
     ):
         zdev.update_info()
+
 
 @patch("zont_api.zont_api.requests")
 def test_update_device_with_api(mock_requests, caplog):
@@ -497,7 +517,7 @@ def test_update_device_with_api(mock_requests, caplog):
     mock_response.json.return_value = MOCK_API_RESPONSE_SINGLE_DEVICE
     mock_requests.post.return_value = mock_response
 
-    zapi = ZontAPI(token='testtoken', client='testclient')
+    zapi = ZontAPI(token="testtoken", client="testclient")
     assert isinstance(zapi, ZontAPI)
     devices = zapi.get_devices()
     assert len(devices) == 1
@@ -513,6 +533,7 @@ def test_update_device_with_api(mock_requests, caplog):
     assert devices[0].update_info() is True
     assert devices[0].last_seen > last_seen
 
+
 @patch("zont_api.zont_api.requests")
 def test_update_device_with_api_empty_devices(mock_requests, caplog):
     """
@@ -525,7 +546,7 @@ def test_update_device_with_api_empty_devices(mock_requests, caplog):
     mock_response.json.return_value = MOCK_API_RESPONSE_SINGLE_DEVICE
     mock_requests.post.return_value = mock_response
 
-    zapi = ZontAPI(token='testtoken', client='testclient')
+    zapi = ZontAPI(token="testtoken", client="testclient")
     assert isinstance(zapi, ZontAPI)
     devices = zapi.get_devices()
     assert len(devices) == 1
@@ -541,6 +562,7 @@ def test_update_device_with_api_empty_devices(mock_requests, caplog):
     assert devices[0].update_info() is False
     assert devices[0].last_seen == last_seen
 
+
 @patch("zont_api.zont_api.requests")
 def test_update_device_with_api_not_found(mock_requests, caplog):
     """
@@ -553,7 +575,7 @@ def test_update_device_with_api_not_found(mock_requests, caplog):
     mock_response.json.return_value = MOCK_API_RESPONSE_SINGLE_DEVICE
     mock_requests.post.return_value = mock_response
 
-    zapi = ZontAPI(token='testtoken', client='testclient')
+    zapi = ZontAPI(token="testtoken", client="testclient")
     assert isinstance(zapi, ZontAPI)
     devices = zapi.get_devices()
     assert len(devices) == 1
@@ -569,6 +591,7 @@ def test_update_device_with_api_not_found(mock_requests, caplog):
     assert devices[0].update_info() is False
     assert devices[0].last_seen == last_seen
 
+
 @patch("zont_api.zont_api.requests")
 def test_update_device_with_api_pii_filtered(mock_requests, caplog):
     """
@@ -581,7 +604,7 @@ def test_update_device_with_api_pii_filtered(mock_requests, caplog):
     mock_response.json.return_value = MOCK_API_RESPONSE_SINGLE_DEVICE_WITH_PII
     mock_requests.post.return_value = mock_response
 
-    zapi = ZontAPI(token='testtoken', client='testclient')
+    zapi = ZontAPI(token="testtoken", client="testclient")
     assert isinstance(zapi, ZontAPI)
     devices = zapi.get_devices()
     assert len(devices) == 1
@@ -596,13 +619,14 @@ def test_update_device_with_api_pii_filtered(mock_requests, caplog):
     assert devices[0].last_seen > last_seen
 
     # verify that PII was filtered from updated info
-    assert devices[0].data["ip"] == '***'
-    assert devices[0].data["login"] == '***'
-    assert devices[0].data["sim_in_device"]["sim_id"]["operator"] == '***'
-    assert devices[0].data["sim_in_device"]["sim_id"]["id"] == '***'
+    assert devices[0].data["ip"] == "***"
+    assert devices[0].data["login"] == "***"
+    assert devices[0].data["sim_in_device"]["sim_id"]["operator"] == "***"
+    assert devices[0].data["sim_in_device"]["sim_id"]["id"] == "***"
     assert devices[0].data["stationary_location"]["loc"] == []
-    assert devices[0].data["users"][0]["phone"] == '***'
-    assert devices[0].data["users"][0]["password"] == '***'
+    assert devices[0].data["users"][0]["phone"] == "***"
+    assert devices[0].data["users"][0]["password"] == "***"
+
 
 @patch("zont_api.zont_api.requests")
 def test_update_device_with_api_exception(mock_requests, caplog):
@@ -616,7 +640,7 @@ def test_update_device_with_api_exception(mock_requests, caplog):
     mock_response.json.return_value = MOCK_API_RESPONSE_SINGLE_DEVICE
     mock_requests.post.return_value = mock_response
 
-    zapi = ZontAPI(token='testtoken', client='testclient')
+    zapi = ZontAPI(token="testtoken", client="testclient")
     assert isinstance(zapi, ZontAPI)
     devices = zapi.get_devices()
     assert len(devices) == 1
@@ -628,5 +652,5 @@ def test_update_device_with_api_exception(mock_requests, caplog):
     mock_response.json.return_value = {}
     mock_requests.post.return_value = mock_response
 
-    with pytest.raises(ZontAPIException, match=r'500: API call to /devices failed'):
+    with pytest.raises(ZontAPIException, match=r"500: API call to /devices failed"):
         devices[0].update_info()

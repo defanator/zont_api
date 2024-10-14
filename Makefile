@@ -43,28 +43,35 @@ show-var-%:
 
 show-env: $(addprefix show-var-, $(SHOW_ENV_VARS)) ## Show environment details
 
-.PHONY: src/zont_api/version.py
 src/zont_api/version.py:
 	@printf "%s\n" "$${__VERSION_CONTENT__}" >$@
 
-.PHONY: version
-version: src/zont_api/version.py
-	@printf "%s\n" "$(VERSION)" >VERSION
+VERSION: src/zont_api/version.py
+	@printf "%s\n" "$(VERSION)" >$@
 
-build: version ## Build a module with python -m build
+$(TOPDIR)/dist/zont_api-$(VERSION)-py3-none-any.whl: VERSION
 	tox run -e build
 
-test: version ## Run tests
+build: $(TOPDIR)/dist/zont_api-$(VERSION)-py3-none-any.whl ## Build a module with python -m build
+
+test: VERSION ## Run tests
 	tox run
 
-lint: version ## Run linters
+lint: VERSION ## Run linters
 	tox run -e lint
 
-fmt: version ## Run formatters
+fmt: VERSION ## Run formatters
 	tox run -e fmt
 
-venv: version ## Create virtualenv
+venv: VERSION ## Create virtualenv
 	tox devenv --list-dependencies .venv
+
+image: build ## Build container image with zont_prom_exporter
+	docker build \
+		-f $(TOPDIR)/examples/zont_prom_exporter/Dockerfile \
+		--build-arg ZONT_API_VERSION=$(VERSION) \
+		-t zont_prom_exporter:$(VERSION) \
+		$(TOPDIR)
 
 clean: ## Clean up
 	find $(TOPDIR)/ -type f -name "*.pyc" -delete
@@ -77,4 +84,4 @@ clean: ## Clean up
 	rm -rf $(TOPDIR)/htmlcov-py*
 	rm -f $(TOPDIR)/src/zont_api/version.py $(TOPDIR)/VERSION
 
-.PHONY: build test lint fmt venv clean
+.PHONY: test lint fmt venv clean

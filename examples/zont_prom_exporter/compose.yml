@@ -1,0 +1,19 @@
+services:
+  zont_prom_exporter:
+    container_name: zont_prom_exporter
+    image: zont_prom_exporter:1.0.0
+    secrets:
+      - zont_api_client
+      - zont_api_token
+    environment:
+      - PYTHONUNBUFFERED=1
+      - ZONT_API_CLIENT_FILE=/run/secrets/zont_api_client
+      - ZONT_API_TOKEN_FILE=/run/secrets/zont_api_token
+    ports:
+      - 6000:6000
+
+secrets:
+  zont_api_client:
+    file: ~/.env.zont-api-client
+  zont_api_token:
+    file: ~/.env.zont-api-token
