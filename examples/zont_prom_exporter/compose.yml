@@ -1,7 +1,7 @@
 services:
   zont_prom_exporter:
     container_name: zont_prom_exporter
-    image: zont_prom_exporter:1.0.0
+    image: zont_prom_exporter:1.0.1
     secrets:
       - zont_api_client
       - zont_api_token
