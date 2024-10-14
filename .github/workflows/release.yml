@@ -7,9 +7,10 @@ on:
       - "v*.*.*"
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
-
+    permissions:
+      packages: write
     steps:
       - uses: actions/checkout@v4
         with:
