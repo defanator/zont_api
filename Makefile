@@ -10,6 +10,10 @@ VERSION := $(shell git describe --tags --always --match='v[0-9]*' | cut -d '-' -
 RELEASE := $(shell git describe --tags --always --match='v[0-9]*' --long | cut -d '-' -f 2)
 BUILD := $(shell git describe --tags --long --always --dirty)-$(DATE)-$(GITHUB_RUN_ID)
 
+IMAGE_TAG := zont_prom_exporter
+IMAGE_PATH := defanator
+IMAGE_REGISTRY := ghcr.io
+
 define __VERSION_CONTENT__
 """
 Dynamic version info
@@ -71,6 +75,14 @@ image: build ## Build container image with zont_prom_exporter
 		-f $(TOPDIR)/examples/zont_prom_exporter/Dockerfile \
 		--build-arg ZONT_API_VERSION=$(VERSION) \
 		-t zont_prom_exporter:$(VERSION) \
+		$(TOPDIR)
+
+images: build ## Build multi-arch container images with zont_prom_exporter
+	docker buildx build --push \
+		--platform linux/arm64,linux/amd64 \
+		-f $(TOPDIR)/examples/zont_prom_exporter/Dockerfile \
+		--build-arg ZONT_API_VERSION=$(VERSION) \
+		-t $(IMAGE_REGISTRY)/$(IMAGE_PATH)/$(IMAGE_TAG):$(VERSION) \
 		$(TOPDIR)
 
 clean: ## Clean up
