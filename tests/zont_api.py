@@ -174,6 +174,38 @@ def test_convert_dta_ignore_zero_deltas():
     ]
 
 
+def test_convert_dta_with_duplicate_datapoints():
+    """
+    Convert data time array with duplicate datapoints (timestamp + value)
+
+    TODO: as Zont servers evidently emit duplicate datapoints sometimes,
+    it would be good to have a logic to filter those.
+    """
+    source_dta = [
+        [1000, 1],
+        [-10, 2],
+        [-10, 3],
+        [1030, 666],
+        [1030, 666],
+        [1030, 666],
+        [-10, 4],
+        [-10, 5],
+    ]
+
+    result_dta = ZontAPI.convert_delta_time_array(ZontAPI, source_dta)
+
+    assert result_dta == [
+        [1000, 1],
+        [1010, 2],
+        [1020, 3],
+        [1030, 666],
+        [1030, 666],
+        [1030, 666],
+        [1040, 4],
+        [1050, 5],
+    ]
+
+
 def test_convert_dta_combined_payload():
     """
     Convert data time array with multiple payload values per element
