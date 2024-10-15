@@ -149,7 +149,9 @@ def export_data(
             if len(v) == 0:
                 continue
             metric = f"device_{device.id}.analog_input_{analog_input_id}.{k}"
-            timeseries = zapi.convert_delta_time_array(subtree.get(k))
+            timeseries = zapi.convert_delta_time_array(
+                subtree.get(k), filter_duplicates=args.filter_duplicates
+            )
             global_stats.update(
                 metric,
                 len(timeseries),
@@ -167,7 +169,9 @@ def export_data(
         if len(dta) == 0:
             continue
         metric = f"device_{device.id}.analog_temperature_sensor_{analog_temperature_sensor_id}"
-        timeseries = zapi.convert_delta_time_array(dta)
+        timeseries = zapi.convert_delta_time_array(
+            dta, filter_duplicates=args.filter_duplicates
+        )
         global_stats.update(
             metric,
             len(timeseries),
@@ -188,7 +192,9 @@ def export_data(
             if len(v) == 0:
                 continue
             metric = f"device_{device.id}.boiler_adapter_{boiler_adapter_id}.{k}"
-            timeseries = zapi.convert_delta_time_array(subtree.get(k))
+            timeseries = zapi.convert_delta_time_array(
+                subtree.get(k), filter_duplicates=args.filter_duplicates
+            )
             global_stats.update(
                 metric,
                 len(timeseries),
@@ -207,7 +213,9 @@ def export_data(
             if len(v) == 0:
                 continue
             metric = f"device_{device.id}.heating_circuit_{heating_circuit_id}.{k}"
-            timeseries = zapi.convert_delta_time_array(subtree.get(k))
+            timeseries = zapi.convert_delta_time_array(
+                subtree.get(k), filter_duplicates=args.filter_duplicates
+            )
             global_stats.update(
                 metric,
                 len(timeseries),
@@ -258,6 +266,12 @@ def main():
         default=None,
         choices=("hourly", "daily"),
         help="split output to periods (dedicated directories will be created under TARGETDIR)",
+    )
+    parser.add_argument(
+        "--filter-duplicates",
+        action="store_true",
+        default=False,
+        help="filter duplicate datapoints",
     )
     parser.add_argument(
         "--targetdir",

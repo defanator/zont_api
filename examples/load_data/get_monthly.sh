@@ -25,7 +25,7 @@ while true; do
     printf -v DATESTR_TO "%04d-%02d-01" "${YEAR}" "$((MONTH))"
 
     mkdir -p "${TARGET_DIR}/${TARGET_SUBDIR}"
-    ./export_timeseries.py --from="${DATESTR_FROM}" --to="${DATESTR_TO}" --targetdir="${TARGET_DIR}/${TARGET_SUBDIR}" >"${TARGET_DIR}/${TARGET_SUBDIR}/export.out" 2>&1
+    ./export_timeseries.py --from="${DATESTR_FROM}" --to="${DATESTR_TO}" --filter-duplicates --targetdir="${TARGET_DIR}/${TARGET_SUBDIR}" >"${TARGET_DIR}/${TARGET_SUBDIR}/export.out" 2>&1
 
     if ((MONTH > END_MONTH)) && ((YEAR >= END_YEAR)); then
         break
