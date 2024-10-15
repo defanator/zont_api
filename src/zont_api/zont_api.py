@@ -325,7 +325,9 @@ class ZontAPI:
 
         return responses[0]
 
-    def convert_delta_time_array(self, delta_time_array, sort=True, reverse=False):
+    def convert_delta_time_array(
+        self, delta_time_array, sort=True, reverse=False, filter_duplicates=False
+    ):
         """
         Converts delta time array to another array with absolute timestamps
         instead of relative ones
@@ -334,6 +336,7 @@ class ZontAPI:
           (https://zont-online.ru/api/docs/?python#delta-time-array)
         :param sort: bool - sort results by absolute timestamp
         :param reverse: bool - reverse sort order
+        :param filter_duplicates: bool - filter out duplicate datapoints
         :return: [] with absolute timestamps
         """
 
@@ -343,7 +346,7 @@ class ZontAPI:
             )
 
         result = []
-        latest_stamp, curr_stamp = 0, 0
+        latest_stamp, curr_stamp, element_count = 0, 0, 0
 
         for element in delta_time_array:
             if not isinstance(element, list):
@@ -366,7 +369,19 @@ class ZontAPI:
                 # we do not expect zero value here
                 continue
 
+            # filter out duplicate datapoint(s) if required
+            if filter_duplicates and element_count > 0:
+                if result[-1][0] == curr_stamp:
+                    logger.debug(
+                        'duplicate datapoint detected at %d: "%s" vs previous "%s"',
+                        curr_stamp,
+                        element[1:],
+                        result[-1][1:],
+                    )
+                    continue
+
             result.append([curr_stamp] + element[1:])
+            element_count += 1
 
         if sort:
             return sorted(result, key=lambda t: t[0], reverse=reverse)
