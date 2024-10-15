@@ -98,7 +98,7 @@ def save_csv(metric_name, arr, targetdir="."):
 
     with open(output_file, "w", encoding="utf-8") as csvout:
         fieldnames = ["timestamp", metric_name]
-        writer = csv.DictWriter(csvout, fieldnames=fieldnames)
+        writer = csv.DictWriter(csvout, fieldnames=fieldnames, delimiter=";")
         writer.writeheader()
         writer.writerows(result)
 
