@@ -484,6 +484,30 @@ class ZontDevice:
             )
         return elements
 
+    def get_heating_circuits(self):
+        """
+        Get list of heating circuits available on a given device
+
+        :return: [] of heating circuits
+        """
+        source = self.data.get("z3k_config").get("heating_circuits")
+
+        if not isinstance(source, list):
+            return None
+
+        elements = []
+        for element in source:
+            elements.append(
+                {
+                    "device_id": self.id,
+                    "id": element.get("id"),
+                    "family": "heating_circuits",
+                    "name": element.get("name"),
+                    "type": element.get("type"),
+                }
+            )
+        return elements
+
     def get_sensor_name(self, sensor_id: int) -> str:
         """
         Obtain sensor name by its ID
