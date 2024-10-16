@@ -3,7 +3,7 @@
 import sys
 import json
 from datetime import datetime, timedelta
-from zont_api import ZontAPI
+from zont_api import ZontAPI, DATA_TYPES_Z3K
 
 
 def main():
@@ -13,18 +13,13 @@ def main():
     dt_to = datetime.now()
     dt_from = dt_to - timedelta(minutes=5)
 
-    data_types = [
-        "z3k_temperature",
-        "z3k_heating_circuit",
-        "z3k_boiler_adapter",
-        "z3k_analog_input",
-    ]
-
     data = []
 
     for device in devices:
         interval = (dt_from.timestamp(), dt_to.timestamp())
-        data.append(zapi.load_data(device.id, data_types=data_types, interval=interval))
+        data.append(
+            zapi.load_data(device.id, data_types=DATA_TYPES_Z3K, interval=interval)
+        )
 
     print(json.dumps(data, ensure_ascii=False))
 

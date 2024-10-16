@@ -4,20 +4,13 @@ Tests for Zont load_data API
 
 import logging
 from unittest.mock import patch, MagicMock
-from zont_api import ZontAPI, ZontDevice
+from zont_api import ZontAPI, ZontDevice, DATA_TYPES_Z3K
 
 
 __author__ = "Andrei Belov"
 __license__ = "MIT"
 __copyright__ = f"Copyright (c) {__author__}"
 
-
-DATA_TYPES_ALL = [
-    "z3k_temperature",
-    "z3k_heating_circuit",
-    "z3k_boiler_adapter",
-    "z3k_analog_input",
-]
 
 MOCK_DATA_EMPTY_RESPONSE = {
     "ok": True,
@@ -125,10 +118,10 @@ def test_load_data_no_series(mock_requests, caplog):
     mock_response.json.return_value = MOCK_DATA_EMPTY_RESPONSE
     mock_requests.post.return_value = mock_response
 
-    data = zapi.load_data(zdev.id, data_types=DATA_TYPES_ALL, interval=(1000, 1120))
+    data = zapi.load_data(zdev.id, data_types=DATA_TYPES_Z3K, interval=(1000, 1120))
 
     assert data.get("device_id") == zdev.id
-    for key_name in DATA_TYPES_ALL:
+    for key_name in DATA_TYPES_Z3K:
         assert key_name in data.keys(), f"{key_name} present in load_data response"
         assert isinstance(data.get(key_name), dict), f"{key_name} is dict"
         assert bool(data.get(key_name)) is False, f"{key_name} dict is empty"
@@ -153,10 +146,10 @@ def test_load_data_with_metrics(mock_requests, caplog):
     mock_response.json.return_value = MOCK_DATA_RESPONSE_WITH_METRICS
     mock_requests.post.return_value = mock_response
 
-    data = zapi.load_data(zdev.id, data_types=DATA_TYPES_ALL, interval=(1000, 1120))
+    data = zapi.load_data(zdev.id, data_types=DATA_TYPES_Z3K, interval=(1000, 1120))
 
     assert data.get("device_id") == zdev.id
-    for key_name in DATA_TYPES_ALL:
+    for key_name in DATA_TYPES_Z3K:
         assert key_name in data.keys(), f"{key_name} present in load_data response"
         assert isinstance(data.get(key_name), dict), f"{key_name} is dict"
         assert bool(data.get(key_name)) is True, f"{key_name} dict is not empty"

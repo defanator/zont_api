@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 import csv
 from http.client import HTTPConnection
 
-from zont_api import ZontAPI, ZontDevice
+from zont_api import ZontAPI, ZontDevice, DATA_TYPES_Z3K
 
 logging.basicConfig(
     level=logging.INFO,
@@ -130,15 +130,8 @@ def export_data(
     elif args.period == "daily":
         targetdir = dt_from.strftime(f"{args.targetdir}/%Y/%Y-%m/%Y-%m-%d")
 
-    data_types = [
-        "z3k_analog_input",
-        "z3k_temperature",
-        "z3k_boiler_adapter",
-        "z3k_heating_circuit",
-    ]
-
     interval = (dt_from.timestamp(), dt_to.timestamp())
-    data = zapi.load_data(device.id, data_types=data_types, interval=interval)
+    data = zapi.load_data(device.id, data_types=DATA_TYPES_Z3K, interval=interval)
 
     # analog inputs like power controller
     # for analog_input in device.get_analog_inputs():

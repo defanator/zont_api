@@ -22,6 +22,14 @@ __copyright__ = f"Copyright (c) {__author__}"
 logger = logging.getLogger(__name__)
 
 
+DATA_TYPES_Z3K = [
+    "z3k_analog_input",
+    "z3k_boiler_adapter",
+    "z3k_heating_circuit",
+    "z3k_temperature",
+]
+
+
 class ZontAPIException(Exception):
     """
     Base class for Zont API exception
@@ -280,14 +288,9 @@ class ZontAPI:
             now = int(time())
             interval = (now - 60, now)
 
-        # if data types are not specified, use z3k subset
+        # if data types are not specified, use z3k subset as default
         if not data_types:
-            data_types = [
-                "z3k_temperature",
-                "z3k_heating_circuit",
-                "z3k_boiler_adapter",
-                "z3k_analog_input",
-            ]
+            data_types = DATA_TYPES_Z3K
 
         data = {
             "requests": [
