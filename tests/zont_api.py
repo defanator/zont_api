@@ -13,10 +13,6 @@ __license__ = "MIT"
 __copyright__ = f"Copyright (c) {__author__}"
 
 
-# zont_api_log = logging.getLogger("zont_api")
-# zont_api_log.setLevel(logging.INFO)
-
-
 def test_init_api_without_params(monkeypatch):
     """
     Initialization without token or client
