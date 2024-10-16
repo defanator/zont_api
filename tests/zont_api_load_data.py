@@ -4,9 +4,8 @@ Tests for Zont load_data API
 
 import logging
 from unittest.mock import patch, MagicMock
-from zont_api import ZontAPI
+from zont_api import ZontAPI, ZontDevice
 
-from tests.zont_device import MOCK_API_RESPONSE_SINGLE_DEVICE
 
 __author__ = "Andrei Belov"
 __license__ = "MIT"
@@ -118,35 +117,25 @@ def test_load_data_no_series(mock_requests, caplog):
     """
     caplog.set_level(logging.DEBUG)
 
-    mock_response = MagicMock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = MOCK_API_RESPONSE_SINGLE_DEVICE
-    mock_requests.post.return_value = mock_response
-
     zapi = ZontAPI(token="testtoken", client="testclient")
-    assert isinstance(zapi, ZontAPI)
-    devices = zapi.get_devices()
-    assert len(devices) == 1
-    assert devices[0].id == 42
+    zdev = ZontDevice(device_data={"id": 42, "name": "testdevice"})
 
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.json.return_value = MOCK_DATA_EMPTY_RESPONSE
     mock_requests.post.return_value = mock_response
 
-    data = zapi.load_data(
-        devices[0].id, data_types=DATA_TYPES_ALL, interval=(1000, 1120)
-    )
+    data = zapi.load_data(zdev.id, data_types=DATA_TYPES_ALL, interval=(1000, 1120))
 
-    assert data.get("device_id") == 42
+    assert data.get("device_id") == zdev.id
     for key_name in DATA_TYPES_ALL:
         assert key_name in data.keys(), f"{key_name} present in load_data response"
         assert isinstance(data.get(key_name), dict), f"{key_name} is dict"
         assert bool(data.get(key_name)) is False, f"{key_name} dict is empty"
 
     # repeat the same request without explicit data_types and interval
-    data = zapi.load_data(devices[0].id)
-    assert data.get("device_id") == 42
+    data = zapi.load_data(zdev.id)
+    assert data.get("device_id") == zdev.id
 
 
 @patch("zont_api.zont_api.requests")
@@ -156,27 +145,17 @@ def test_load_data_with_metrics(mock_requests, caplog):
     """
     caplog.set_level(logging.DEBUG)
 
-    mock_response = MagicMock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = MOCK_API_RESPONSE_SINGLE_DEVICE
-    mock_requests.post.return_value = mock_response
-
     zapi = ZontAPI(token="testtoken", client="testclient")
-    assert isinstance(zapi, ZontAPI)
-    devices = zapi.get_devices()
-    assert len(devices) == 1
-    assert devices[0].id == 42
+    zdev = ZontDevice(device_data={"id": 42, "name": "testdevice"})
 
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.json.return_value = MOCK_DATA_RESPONSE_WITH_METRICS
     mock_requests.post.return_value = mock_response
 
-    data = zapi.load_data(
-        devices[0].id, data_types=DATA_TYPES_ALL, interval=(1000, 1120)
-    )
+    data = zapi.load_data(zdev.id, data_types=DATA_TYPES_ALL, interval=(1000, 1120))
 
-    assert data.get("device_id") == 42
+    assert data.get("device_id") == zdev.id
     for key_name in DATA_TYPES_ALL:
         assert key_name in data.keys(), f"{key_name} present in load_data response"
         assert isinstance(data.get(key_name), dict), f"{key_name} is dict"
