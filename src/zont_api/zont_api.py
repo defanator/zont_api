@@ -22,6 +22,14 @@ __copyright__ = f"Copyright (c) {__author__}"
 logger = logging.getLogger(__name__)
 
 
+DATA_TYPES_Z3K = [
+    "z3k_analog_input",
+    "z3k_boiler_adapter",
+    "z3k_heating_circuit",
+    "z3k_temperature",
+]
+
+
 class ZontAPIException(Exception):
     """
     Base class for Zont API exception
@@ -280,14 +288,9 @@ class ZontAPI:
             now = int(time())
             interval = (now - 60, now)
 
-        # if data types are not specified, use z3k subset
+        # if data types are not specified, use z3k subset as default
         if not data_types:
-            data_types = [
-                "z3k_temperature",
-                "z3k_heating_circuit",
-                "z3k_boiler_adapter",
-                "z3k_analog_input",
-            ]
+            data_types = DATA_TYPES_Z3K
 
         data = {
             "requests": [
@@ -325,7 +328,9 @@ class ZontAPI:
 
         return responses[0]
 
-    def convert_delta_time_array(self, delta_time_array, sort=True, reverse=False):
+    def convert_delta_time_array(
+        self, delta_time_array, sort=True, reverse=False, filter_duplicates=False
+    ):
         """
         Converts delta time array to another array with absolute timestamps
         instead of relative ones
@@ -334,6 +339,7 @@ class ZontAPI:
           (https://zont-online.ru/api/docs/?python#delta-time-array)
         :param sort: bool - sort results by absolute timestamp
         :param reverse: bool - reverse sort order
+        :param filter_duplicates: bool - filter out duplicate datapoints
         :return: [] with absolute timestamps
         """
 
@@ -343,7 +349,7 @@ class ZontAPI:
             )
 
         result = []
-        latest_stamp, curr_stamp = 0, 0
+        latest_stamp, curr_stamp, element_count = 0, 0, 0
 
         for element in delta_time_array:
             if not isinstance(element, list):
@@ -366,7 +372,19 @@ class ZontAPI:
                 # we do not expect zero value here
                 continue
 
+            # filter out duplicate datapoint(s) if required
+            if filter_duplicates and element_count > 0:
+                if result[-1][0] == curr_stamp:
+                    logger.debug(
+                        'duplicate datapoint detected at %d: "%s" vs previous "%s"',
+                        curr_stamp,
+                        element[1:],
+                        result[-1][1:],
+                    )
+                    continue
+
             result.append([curr_stamp] + element[1:])
+            element_count += 1
 
         if sort:
             return sorted(result, key=lambda t: t[0], reverse=reverse)
@@ -480,6 +498,30 @@ class ZontDevice:
                     "adapter_type": element.get("adapter_type"),
                     "type": element.get("type"),
                     "boiler_model": element.get("boiler_model"),
+                }
+            )
+        return elements
+
+    def get_heating_circuits(self):
+        """
+        Get list of heating circuits available on a given device
+
+        :return: [] of heating circuits
+        """
+        source = self.data.get("z3k_config").get("heating_circuits")
+
+        if not isinstance(source, list):
+            return None
+
+        elements = []
+        for element in source:
+            elements.append(
+                {
+                    "device_id": self.id,
+                    "id": element.get("id"),
+                    "family": "heating_circuits",
+                    "name": element.get("name"),
+                    "type": element.get("type"),
                 }
             )
         return elements

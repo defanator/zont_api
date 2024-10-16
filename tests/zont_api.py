@@ -3,6 +3,7 @@ Tests for ZontAPI
 """
 
 import os
+import logging
 import pytest
 from zont_api import ZontAPIException, ZontAPI
 
@@ -171,6 +172,71 @@ def test_convert_dta_ignore_zero_deltas():
         [1020, 3],
         [1030, 4],
         [1040, 5],
+    ]
+
+
+def test_convert_dta_with_duplicate_datapoints():
+    """
+    Convert data time array with duplicate datapoints (timestamp + value)
+    without filtering
+    """
+    source_dta = [
+        [1000, 1],
+        [-10, 2],
+        [-10, 3],
+        [1030, 666],
+        [1030, 666],
+        [1030, 666],
+        [-10, 4],
+        [-10, 5],
+    ]
+
+    result_dta = ZontAPI.convert_delta_time_array(ZontAPI, source_dta)
+
+    assert result_dta == [
+        [1000, 1],
+        [1010, 2],
+        [1020, 3],
+        [1030, 666],
+        [1030, 666],
+        [1030, 666],
+        [1040, 4],
+        [1050, 5],
+    ]
+
+
+def test_convert_dta_with_duplicate_datapoints_filter(caplog):
+    """
+    Convert data time array with duplicate datapoints (timestamp + value)
+    with filtering out all subsequent duplicates with the same timestamp
+    without checking a value.
+
+    Zont servers evidently emit duplicate datapoints sometimes,
+    so having a knob to filter those out could be handy.
+    """
+    caplog.set_level(logging.DEBUG)
+    source_dta = [
+        [1000, 1],
+        [-10, 2],
+        [-10, 3],
+        [1030, 666],
+        [1030, 667],
+        [1030, 668],
+        [-10, 4],
+        [-10, 5],
+    ]
+
+    result_dta = ZontAPI.convert_delta_time_array(
+        ZontAPI, source_dta, filter_duplicates=True
+    )
+
+    assert result_dta == [
+        [1000, 1],
+        [1010, 2],
+        [1020, 3],
+        [1030, 666],
+        [1040, 4],
+        [1050, 5],
     ]
 
 
