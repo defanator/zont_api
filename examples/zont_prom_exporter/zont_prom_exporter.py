@@ -84,6 +84,18 @@ BOILER_OTA_RML = Gauge(
     "zont_boiler_rml", "Burner modulation level", ["device_id", "sensor_id"]
 )
 
+# авария котла
+# boiler failure status
+BOILER_OTA_FAILED = Gauge(
+    "zont_boiler_failed", "Boiler failure status", ["device_id", "sensor_id"]
+)
+
+# последний код ошибки
+# boiler last error code
+BOILER_OTA_ERROR = Gauge(
+    "zont_boiler_error", "Latest error code", ["device_id", "sensor_id"]
+)
+
 
 zapi = None
 zdevice = None
@@ -157,6 +169,16 @@ def update_metrics() -> bool:
             BOILER_OTA_DS.labels(zdevice.id, adapter_id).set(z3k_ot.get("ds"))
             BOILER_OTA_DT.labels(zdevice.id, adapter_id).set(z3k_ot.get("dt"))
             BOILER_OTA_RML.labels(zdevice.id, adapter_id).set(z3k_ot.get("rml"))
+
+            status = z3k_ot.get("s", [])
+            # TODO: should we keep these metrics permanently instead of setting on error only?
+            if len(status) > 0:
+                if "f" in status:
+                    boiler_error = z3k_ot.get("ff", {}).get("c", 0)
+                    logger.info("boiler error detected: E%02d", boiler_error)
+                    BOILER_OTA_FAILED.labels(zdevice.id, adapter_id).set(1)
+                    BOILER_OTA_ERROR.labels(zdevice.id, adapter_id).set(boiler_error)
+
             logger.info("%s/%s (%s) updated", zdevice.id, adapter_id, adapter_name)
         except Exception as e:
             logger.error(
