@@ -6,6 +6,8 @@
 .venv
 .tox
 .pytest_cache
+.envrc
+attic/
 build/
 dist/
 htmlcov/
