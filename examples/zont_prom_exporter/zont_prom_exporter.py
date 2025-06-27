@@ -84,6 +84,18 @@ BOILER_OTA_RML = Gauge(
     "zont_boiler_rml", "Burner modulation level", ["device_id", "sensor_id"]
 )
 
+# авария котла
+# boiler failure status
+BOILER_OTA_FAILED = Gauge(
+    "zont_boiler_failed", "Boiler failure status", ["device_id", "sensor_id"]
+)
+
+# последний код ошибки
+# boiler last error code
+BOILER_OTA_ERROR = Gauge(
+    "zont_boiler_error", "Latest error code", ["device_id", "sensor_id"]
+)
+
 
 zapi = None
 zdevice = None
@@ -151,12 +163,53 @@ def update_metrics() -> bool:
         adapter_name = boiler_adapter.get("name")
         try:
             z3k_ot = z3k.get(adapter_id).get("ot")
+
+            """
+            https://zont-online.ru/api/docs/#c248a6163b-4
+
+            ot (object) — состояние OpenTherm
+                s (array) — массив флагов состояния
+                    "f" — авария
+                    "ch" — отопление включено
+                    "dhw" — ГВС включено
+                    "fl" — горелка работает
+                    "cl" — охлаждение работает
+                    "ch2" — второй контур отопления включен
+                    "di" — диагностическая индикация
+                cs (float) — расчётная температура теплоносителя отопления
+                ff (object) — состояние аварии
+                    c (int) — OEM-код аварии
+                    f (array) — флаги аварии
+                        "sr" — требуется обслуживание
+                        "lr" — требуется ручной сброс
+                        "wp" — низкое давление теплоносителя
+                        "gf" — сбой газа/горелки
+                        "ap" — сбой давления воздуха
+                        "wot" — превышение температуры
+                bt (float) — фактическая температура теплоносителя
+                dt (float) — фактическая температура ГВС
+                ot (float) — уличная температура
+                rwt (float) — температура обратного потока
+                rml (float) — относительный уровень модуляции в процентах
+                wp (float) — давление теплоносителя (бар)
+                fr (float) — скорость потока ГВС (литр/мин)
+            """
+
             BOILER_OTA_OT.labels(zdevice.id, adapter_id).set(z3k_ot.get("ot"))
             BOILER_OTA_CS.labels(zdevice.id, adapter_id).set(z3k_ot.get("cs"))
             BOILER_OTA_BT.labels(zdevice.id, adapter_id).set(z3k_ot.get("bt"))
             BOILER_OTA_DS.labels(zdevice.id, adapter_id).set(z3k_ot.get("ds"))
             BOILER_OTA_DT.labels(zdevice.id, adapter_id).set(z3k_ot.get("dt"))
             BOILER_OTA_RML.labels(zdevice.id, adapter_id).set(z3k_ot.get("rml"))
+
+            status = z3k_ot.get("s", [])
+            # TODO: should we keep these metrics permanently instead of setting on error only?
+            if "f" in status:
+                boiler_error = z3k_ot.get("ff", {}).get("c", -1)
+                logger.info("boiler error detected: E%02d", boiler_error)
+                BOILER_OTA_FAILED.labels(zdevice.id, adapter_id).set(1)
+                BOILER_OTA_ERROR.labels(zdevice.id, adapter_id).set(boiler_error)
+
             logger.info("%s/%s (%s) updated", zdevice.id, adapter_id, adapter_name)
         except Exception as e:
             logger.error(
