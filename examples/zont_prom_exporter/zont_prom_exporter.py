@@ -4,8 +4,7 @@ import sys
 import logging
 from flask import Flask
 from apscheduler.schedulers.background import BackgroundScheduler
-from prometheus_client import make_wsgi_app, Gauge
-from werkzeug.middleware.dispatcher import DispatcherMiddleware
+from prometheus_client import generate_latest, Gauge, CONTENT_TYPE_LATEST
 from zont_api import ZontAPI, ZontAPIException
 
 APP_NAME = "zont_prom_exporter"
@@ -25,8 +24,6 @@ HTTPConnection.debuglevel = 1
 """
 
 app = Flask(APP_NAME)
-
-app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {"/metrics": make_wsgi_app()})
 
 # напряжение питания
 # input voltage
@@ -84,16 +81,10 @@ BOILER_OTA_RML = Gauge(
     "zont_boiler_rml", "Burner modulation level", ["device_id", "sensor_id"]
 )
 
-# авария котла
-# boiler failure status
+# авария котла - код последней ошибки
+# boiler malfunction - latest error code
 BOILER_OTA_FAILED = Gauge(
-    "zont_boiler_failed", "Boiler failure status", ["device_id", "sensor_id"]
-)
-
-# последний код ошибки
-# boiler last error code
-BOILER_OTA_ERROR = Gauge(
-    "zont_boiler_error", "Latest error code", ["device_id", "sensor_id"]
+    "zont_boiler_failed", "Boiler failure - latest error code", ["device_id", "sensor_id"]
 )
 
 
@@ -203,12 +194,13 @@ def update_metrics() -> bool:
             BOILER_OTA_RML.labels(zdevice.id, adapter_id).set(z3k_ot.get("rml"))
 
             status = z3k_ot.get("s", [])
-            # TODO: should we keep these metrics permanently instead of setting on error only?
+            # TODO: should we keep this metric permanently instead of setting it on error only?
             if "f" in status:
                 boiler_error = z3k_ot.get("ff", {}).get("c", -1)
                 logger.info("boiler error detected: E%02d", boiler_error)
-                BOILER_OTA_FAILED.labels(zdevice.id, adapter_id).set(1)
-                BOILER_OTA_ERROR.labels(zdevice.id, adapter_id).set(boiler_error)
+                BOILER_OTA_FAILED.labels(zdevice.id, adapter_id).set(boiler_error)
+            else:
+                BOILER_OTA_FAILED.remove(zdevice.id, adapter_id)
 
             logger.info("%s/%s (%s) updated", zdevice.id, adapter_id, adapter_name)
         except Exception as e:
@@ -299,6 +291,11 @@ def default():
     Placeholder for the default route
     """
     return "Try /metrics!\n"
+
+
+@app.route("/metrics")
+def metrics():
+    return generate_latest(), 200, {'Content-Type': CONTENT_TYPE_LATEST}
 
 
 if __name__ == "__main__":
